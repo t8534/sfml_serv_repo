@@ -1,0 +1,42 @@
+
+#0
+Problem na dell
+
+http://cpp0x.pl/kursy/Kurs-C++/FAQ/Program-nie-uruchamia-sie-z-exe-brak-libgcc_s_dw2-1-dll-libstdc++-6-dll/584
+https://stackoverflow.com/questions/4702732/the-program-cant-start-because-libgcc-s-dw2-1-dll-is-missing
+
+
+
+
+1.
+You can send the best only bytes, because of compatibility on different platforms.
+https://www.sfml-dev.org/tutorials/2.5/network-packet.php
+
+
+To send data, you must call the send function with a pointer to the data that you want to send,
+and the number of bytes to send. 
+char data[100] = ...;
+
+// TCP socket:
+if (socket.send(data, 100) != sf::Socket::Done)
+{
+    // error...
+}
+
+// UDP socket:
+sf::IpAddress recipient = "192.168.0.5";
+unsigned short port = 54000;
+if (socket.send(data, 100, recipient, port) != sf::Socket::Done)
+{
+    // error...
+}
+The send functions take a void* pointer, so you can pass the address of anything. However,
+it is generally a bad idea to send something other than an array of bytes because native types
+with a size larger than 1 byte are not guaranteed to be the same on every machine: Types such
+as int or long may have a different size, and/or a different endianness. Therefore, such types
+cannot be exchanged reliably across different systems. This problem is explained (and solved)
+in the tutorial on packets. 
+
+
+
+
