@@ -27,7 +27,7 @@ static void printBuff(unsigned char *b)
 void GPSDEV_GetMsg(char *b)
 {
 
-    pthread_mutex_lock(&gpsmsg_mutex);
+//    pthread_mutex_lock(&gpsmsg_mutex);
     // read buffer here
     strcpy(b, gpsdev_buff);
     /*
@@ -36,7 +36,7 @@ void GPSDEV_GetMsg(char *b)
     	b[i] = gpsdev_buff[i];
     }
     */
-    pthread_mutex_unlock(&gpsmsg_mutex);
+//    pthread_mutex_unlock(&gpsmsg_mutex);
 
 
 
@@ -56,9 +56,7 @@ void GPSDEV_GetMsg(char *b)
 void *Gpsdev(void *x_void_ptr)
 {
 	bool gpsMsgReceived = false;  // Is gps msg received
-
-
-
+	
 	for(;;)
 	{
 		memset(gpsdev_buff, 0, GPSDEV_BUFF_LEN);
@@ -71,14 +69,26 @@ void *Gpsdev(void *x_void_ptr)
 		// After full gps msg is received from gps_hw, send event to the Server.
 		if(gpsMsgReceived == true)
 		{
+		
+			std::cout << "Test: Gpsdev: Before GPSHW_GetMsg(gpsdev_buff)" << std::endl;
+		
 			// Copy gps hw data to the buffer, than it could be processed by gpslib in future.
 		    pthread_mutex_lock(&gpsmsg_mutex);
 			GPSHW_GetMsg(gpsdev_buff);
 			pthread_mutex_unlock(&gpsmsg_mutex);
 
+			std::cout << "Test: Gpsdev: After GPSHW_GetMsg(gpsdev_buff)" << std::endl;
+
+			std::cout << "Test: Gpsdev: Before pthread_cond_signal(&condition_cond);" << std::endl;
+
+#if 0
 			pthread_mutex_lock(&condition_mutex);
 			pthread_cond_signal(&condition_cond);
 			pthread_mutex_unlock(&condition_mutex);
+#endif
+			
+			std::cout << "Test: Gpsdev: After pthread_cond_signal(&condition_cond);" << std::endl;
+			
 		}
 
 		//  set gpsMsgReceived = false to emulate waiting for complete msg from gps hgw

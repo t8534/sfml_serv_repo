@@ -103,9 +103,26 @@ while (running)
 // Server is not working, probably after put the code into pthread
 // Cannot debug because debugger do not found pthread sources.
 // Confirmed, sockets are not working correctly as pthread thread.
+// So, make a test and put server not in thread, but only gpsdev in thread.
+// At this moment both server and gpsdev were in separate threads.
+// But try to debug what is a reason it is not working with two threads.
+//
+// Seems to be this is working if server is not as a thread, but gpsdev is.
+// However, the connection is set on both sides, but data are not send.
+// It means, this is working but if wait/signal are commented, and buffer mutexes as well.
+//
+// todo: check is it working without mutexes on the buffer, so is wait/signal working
+// todo: make operation on exchange buffer mutexed, the problem is with gpshw.c, not compilable now.
+//
+//
+// Use printf() + fflush(stdout) in place of cout
+// Just insert std::flush:
+// std::cout << "Beginning computations..." << std::flush;
+// Also note that inserting std::endl will also flush after writing a newline.
 //
 // https://stackoverflow.com/questions/2354417/c-socket-api-is-thread-safe
 // http://www.cplusplus.com/forum/general/200941/
+//
 //
 
 
@@ -114,7 +131,7 @@ while (running)
 #include <pthread.h>
 #include "sfml_serv.hpp"
 
-#include "gpsdev._hpp"
+#include "gpsdev.hpp"
 #include "server.hpp"
 
 
@@ -126,12 +143,15 @@ pthread_cond_t  condition_cond  = PTHREAD_COND_INITIALIZER;
 int main(int argc, char* argv[])
 {
 
+#if 0
+	// Thsi is woring
 	std::cout << "Server is starting" << std::endl;
 	Server();
 	std::cout << "Server is finished" << std::endl;
-
+#endif
 
 #if 0
+	// Not working with server as a thread
 	pthread_t thread1, thread2;
 
 	pthread_create(&thread1, NULL, Server, NULL);
@@ -139,6 +159,15 @@ int main(int argc, char* argv[])
 	pthread_join( thread1, NULL);
 	pthread_join( thread2, NULL);
 #endif
+
+	// Test if this is only signle thread for gpsdev
+	pthread_t thread2;
+	Server();
+	//pthread_create(&thread1, NULL, Server, NULL);
+	pthread_create(&thread2, NULL, Gpsdev, NULL);
+
+	//pthread_join( thread2, NULL);  // todo: what about this join ?
+
 
 	exit(0);
 
@@ -261,3 +290,4 @@ int main(int argc, char* argv[])
 }
 
 #endif
+

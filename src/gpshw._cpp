@@ -9,6 +9,9 @@
 #include <string.h>
 //#include <windows.h> // Sleep()
 #include "gpshw.hpp"
+#include "sfml_serv.hpp"
+
+
 
 #define	GPSHW_NBR_OF_MESSAGES	3
 static const char *msg[GPSHW_NBR_OF_MESSAGES] = {
@@ -44,10 +47,11 @@ void GPSHW_GetMsg(char *b)
 {
 	static uint16_t idx = 0;
 
+//    pthread_mutex_lock(&gpsmsg_mutex);
 	strcpy(b, msg[idx]);  //todo: what type of second parameter here ?
 	idx++;
 	if (idx > GPSHW_NBR_OF_MESSAGES)
 		idx = 0;
-
+//    pthread_mutex_unlock(&gpsmsg_mutex);
 }
 

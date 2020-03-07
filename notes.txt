@@ -122,4 +122,3 @@ a good documentation with the test code examples.
 See example of using sfml threads, but in general it was suggested to use pthread rather.
 https://en.sfml-dev.org/forums/index.php?topic=13198.0
 
-

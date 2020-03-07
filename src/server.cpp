@@ -25,7 +25,7 @@
 #include <windows.h> // Sleep()
 #include "server.hpp"
 
-#include "gpsdev._hpp"
+#include "gpsdev.hpp"
 
 
 
@@ -42,6 +42,7 @@ static void printBuff(char *b)
 
 
 #if 0
+// Not working as a thread
 void *Server(void *x_void_ptr)
 {
 	sf::TcpListener listener;
@@ -180,7 +181,8 @@ void *Server(void *x_void_ptr)
 #endif
 
 
-
+// Working, with no threads.
+#if 0
 void GPSDEV_GetMsg(char *b)
 {
 	int len = 0;
@@ -331,5 +333,153 @@ void Server()
 	}	// end for(;;)
 
 }
+#endif
 
+
+// Test with threads, but server is not thread. But using mutexes
+void Server()
+{
+	sf::TcpListener listener;
+	sf::Socket::Status conStatus = sf::Socket::Error;
+	sf::TcpSocket socket;
+	sf::Mutex globalMutex;
+	bool run = true;
+	bool connection = true;
+	std::size_t bytesSent = 0;
+
+	for (;;)
+	{
+		memset(serv_buff, 0, GPSDEV_BUFF_LEN);
+
+		conStatus = listener.listen(PORT);
+		if(conStatus == sf::Socket::Done)
+		{
+			std::cout << "OK: listener.listen(PORT) == sf::Socket::Done" << std::endl;
+		}
+		else if(conStatus == sf::Socket::NotReady)
+		{
+			std::cout << "ERR: listener.listen(PORT) == sf::Socket::NotReady" << std::endl;
+			continue;
+		}
+		else if(conStatus == sf::Socket::Partial)
+		{
+			std::cout << "ERR: listener.listen(PORT) == sf::Socket::Partial" << std::endl;
+			continue;
+		}
+		else if(conStatus == sf::Socket::Disconnected)
+		{
+			std::cout << "ERR: listener.listen(PORT) == sf::Socket::Disconnected" << std::endl;
+			continue;
+		}
+		else if(conStatus == sf::Socket::Error)
+		{
+			std::cout << "ERR: listener.listen(PORT) == sf::Socket::Error" << std::endl;
+			continue;
+		}
+
+
+		while (run)
+		{
+			std::cout << "Test accept 1" << std::endl;
+
+			conStatus = listener.accept(socket);
+
+			std::cout << "Test accept 2" << std::endl;
+
+			if(conStatus == sf::Socket::Done)
+			{
+				std::cout << "OK: listener.accept(socket) == sf::Socket::Done" << std::endl;
+			}
+			else if(conStatus == sf::Socket::NotReady)
+			{
+				std::cout << "ERR: listener.accept(socket) == sf::Socket::NotReady" << std::endl;
+				//continue;  //TODO: what about continue everywhere
+			}
+			else if(conStatus == sf::Socket::Partial)
+			{
+				std::cout << "ERR: listener.accept(socket) == sf::Socket::Partial" << std::endl;
+				//continue;
+			}
+			else if(conStatus == sf::Socket::Disconnected)
+			{
+				std::cout << "ERR: listener.accept(socket) == sf::Socket::Disconnected" << std::endl;
+				//continue;
+			}
+			else if(conStatus == sf::Socket::Error)
+			{
+				std::cout << "ERR: listener.accept(socket) == sf::Socket::Error" << std::endl;
+				//continue;
+			}
+
+
+			std::cout << "Test accept 3" << std::endl;
+
+
+			while (connection)
+			{
+				std::cout << "Test Before pthread_cond_wait(&condition_cond, &condition_mutex);" << std::endl;
+
+#if 0
+				pthread_mutex_lock( &condition_mutex );
+				pthread_cond_wait(&condition_cond, &condition_mutex);
+				// todo: perhaps GPSDEV_GetMsg(buff) shoudl be here ?
+				pthread_mutex_unlock( &condition_mutex );
+#endif
+
+				std::cout << "Test Before GPSDEV_GetMsg(serv_buff)" << std::endl;
+
+				// prepare msg
+				GPSDEV_GetMsg(serv_buff);
+
+
+				std::cout << "Test After GPSDEV_GetMsg(serv_buff)" << std::endl;
+
+				// send msg
+				// This function i sblocking and will fail if the socket is not connected.
+				//Status sf::TcpSocket::send(const void * data, std::size_t size, std::size_t &sent)
+				conStatus = socket.send(serv_buff, (size_t)GPSDEV_BUFF_LEN, bytesSent);
+				if(conStatus == sf::Socket::Done)
+				{
+					std::cout << "OK: socket.send(buff, (size_t)GPSDEV_BUFF_LEN, bytesSent) == sf::Socket::Done" << std::endl;
+				}
+				else if(conStatus == sf::Socket::NotReady)
+				{
+					std::cout << "ERR: socket.send(buff, (size_t)GPSDEV_BUFF_LEN, bytesSent) == sf::Socket::NotReady" << std::endl;
+					break;
+				}
+				else if(conStatus == sf::Socket::Partial)
+				{
+					std::cout << "ERR: socket.send(buff, (size_t)GPSDEV_BUFF_LEN, bytesSent) == sf::Socket::Partial" << std::endl;
+					break;
+				}
+				else if(conStatus == sf::Socket::Disconnected)
+				{
+					std::cout << "ERR: socket.send(buff, (size_t)GPSDEV_BUFF_LEN, bytesSent) == sf::Socket::Disconnected" << std::endl;
+					break;
+				}
+				else if(conStatus == sf::Socket::Error)
+				{
+					std::cout << "ERR: socket.send(buff, (size_t)GPSDEV_BUFF_LEN, bytesSent) == sf::Socket::Error" << std::endl;
+					break;
+				}
+
+
+				if (bytesSent != GPSDEV_BUFF_LEN)
+				{
+					std::cout << "ERR: bytesSent != BUFF_LEN" << std::endl;
+				}
+
+				// https://stackoverflow.com/questions/158585/how-do-you-add-a-timed-delay-to-a-c-program
+				// Win32: Sleep(milliseconds) is what you what
+				// Linux: sleep(seconds)
+				Sleep(1);  // send data every 1 sec
+
+			}// end while(connection)
+
+
+		}	// end while(run)
+
+	}	// end for(;;)
+
+}
 
