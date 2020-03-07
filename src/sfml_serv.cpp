@@ -102,14 +102,20 @@ while (running)
 // 1.
 // Server is not working, probably after put the code into pthread
 // Cannot debug because debugger do not found pthread sources.
+// Confirmed, sockets are not working correctly as pthread thread.
+//
+// https://stackoverflow.com/questions/2354417/c-socket-api-is-thread-safe
+// http://www.cplusplus.com/forum/general/200941/
+//
 
 
 #include <iostream>
 #include <SFML/Network.hpp>
 #include <pthread.h>
 #include "sfml_serv.hpp"
+
+#include "gpsdev._hpp"
 #include "server.hpp"
-#include "gpsdev.hpp"
 
 
 
@@ -119,18 +125,20 @@ pthread_cond_t  condition_cond  = PTHREAD_COND_INITIALIZER;
 
 int main(int argc, char* argv[])
 {
-	/*
+
 	std::cout << "Server is starting" << std::endl;
 	Server();
 	std::cout << "Server is finished" << std::endl;
-	*/
 
+
+#if 0
 	pthread_t thread1, thread2;
 
 	pthread_create(&thread1, NULL, Server, NULL);
 	pthread_create(&thread2, NULL, Gpsdev, NULL);
 	pthread_join( thread1, NULL);
 	pthread_join( thread2, NULL);
+#endif
 
 	exit(0);
 

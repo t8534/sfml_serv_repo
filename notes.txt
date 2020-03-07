@@ -12,6 +12,8 @@ http://wiki.eclipse.org/EGit/User_Guide/State
 
 
 
+
+
 1.
 You can send the best only bytes, because of compatibility on different platforms.
 https://www.sfml-dev.org/tutorials/2.5/network-packet.php
@@ -96,7 +98,12 @@ https://www.cs.cmu.edu/afs/cs/academic/class/15492-f07/www/pthreads.html
 
 4.
 Sfml sockets do not work correctly in phtread ?
-
+Why I do not use sfml thread, what was a reason ?
+No events ?
+However in general sfml threads are not suggested.
+Maybe it could be good to add events to sfml threads ?
+It could be based on conditional variable as in pthreads.
+ 
 
 Ptlib provides cross platform C++ code that works well for sockets. www.opalvoip.org
 Copes nicely with threads. Some support for mac and BSD. Under active development and maintainance.
@@ -114,7 +121,5 @@ a good documentation with the test code examples.
 
 See example of using sfml threads, but in general it was suggested to use pthread rather.
 https://en.sfml-dev.org/forums/index.php?topic=13198.0
-
-
 
 

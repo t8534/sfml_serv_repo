@@ -9,7 +9,8 @@
 #include "sfml_serv.hpp"
 
 
-void *Server(void *x_void_ptr);
-
+//void *Server(void *x_void_ptr);
+void Server();
 
 #endif /* SERVER_HPP_ */
+

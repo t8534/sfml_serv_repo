@@ -1,0 +1,13 @@
+/*
+ * gpsdev.hpp
+ *
+ *      Author: LiberdaA
+ */
+
+#include "sfml_serv.hpp"
+
+
+void GPSDEV_GetMsg(char *b);
+
+void *Gpsdev(void *x_void_ptr);
+
