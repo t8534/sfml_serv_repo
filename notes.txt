@@ -6,6 +6,10 @@ http://cpp0x.pl/kursy/Kurs-C++/FAQ/Program-nie-uruchamia-sie-z-exe-brak-libgcc_s
 https://stackoverflow.com/questions/4702732/the-program-cant-start-because-libgcc-s-dw2-1-dll-is-missing
 
 
+#1
+Egit icon list:
+http://wiki.eclipse.org/EGit/User_Guide/State
+
 
 
 1.
@@ -36,6 +40,80 @@ with a size larger than 1 byte are not guaranteed to be the same on every machin
 as int or long may have a different size, and/or a different endianness. Therefore, such types
 cannot be exchanged reliably across different systems. This problem is explained (and solved)
 in the tutorial on packets. 
+
+
+2.
+How to detect closed connection.
+
+https://stackoverflow.com/questions/283375/detecting-tcp-client-disconnect
+
+In TCP there is only one way to detect an orderly disconnect, and that is by getting zero as a return
+value from read()/recv()/recvXXX() when reading.
+There is also only one reliable way to detect a broken connection: by writing to it. After enough
+writes to a broken connection, TCP will have done enough retries and timeouts to know that it's broken
+and will eventually cause write()/send()/sendXXX() to return -1 with an errno/WSAGetLastError()
+value of ECONNRESET, or in some cases 'connection timed out'. Note that the latter is different from
+'connect timeout', which can occur in the connect phase.
+You should also set a reasonable read timeout, and drop connections that fail it.
+The answer here about ioctl() and FIONREAD is compete nonsense. All that does is tell you how many
+bytes are presently in the socket receive buffer, available to be read without blocking. If a client
+doesn't send you anything for five minutes that doesn't constitute a disconnect, but it does cause
+FIONREAD to be zero. Not the same thing: not even close.
+
+
+A single write usually just gets buffered and sent over the network asynchronously, unless it is very large. You need to issue enough writes so that all the internal timers and retries have been exhausted on the original write for an error to be detected.
+
+
+3.
+The gps device should trigger sending data to the server.
+The condition variable should be used, as it is used by pthreads.
+
+https://www.cs.cmu.edu/afs/cs/academic/class/15492-f07/www/pthreads.html
+
+A condition variable is a variable of type pthread_cond_t and is used with the appropriate functions for
+waiting and later, process continuation. The condition variable mechanism allows threads to suspend
+execution and relinquish the processor until some condition is true. A condition variable must always
+be associated with a mutex to avoid a race condition created by one thread preparing to wait and another
+thread which may signal the condition before the first thread actually waits on it resulting in a deadlock.
+The thread will be perpetually waiting for a signal that is never sent. Any mutex can be used, there is
+no explicit link between the mutex and the condition variable.
+
+2013 discussion:
+
+The answer is that SFML is not a threading library, it only implements what it needs. There are dedicated
+threading libraries that do this job much better than SFML would (boost, C++11 standard library, ...),
+so there's no reason for me to reinvent the wheel.
+
+So in the case where it's needed in the Android code, would you (if you were writing it) just use pthreads
+directly (so you use pthread threads, mutexes, and condition variables, avoid all the sf::Thread stuff),
+or would you write a condition variable class for SFML and then use sf::Thread, sf::Mutex, sf::ConditionVariable,
+etc?
+
+So, final decision is to use pthreads.
+
+https://www.cs.cmu.edu/afs/cs/academic/class/15492-f07/www/pthreads.html
+
+
+4.
+Sfml sockets do not work correctly in phtread ?
+
+
+Ptlib provides cross platform C++ code that works well for sockets. www.opalvoip.org
+Copes nicely with threads. Some support for mac and BSD. Under active development and maintainance.
+MPL Core library in Ekiga - the preferred desktop app that does SIP & H.323
+For windows - it compiles with MSVC. for linux, it compiles with gcc autoconf make etc.
+OK, it is C++, but you can work with that... Have a the source inside ptlib/samples - there
+are many examples of using ptlib there.
+
+
+The plibsys library provides all the requested features: cross-platform and portable, lightweight,
+provides socket IPv4 and IPv6 support as well as many other useful things like multithreading.
+Works with sockets in non-blocking mode (though you can switch to a blocking one, too). Has quite
+a good documentation with the test code examples.
+
+
+See example of using sfml threads, but in general it was suggested to use pthread rather.
+https://en.sfml-dev.org/forums/index.php?topic=13198.0
 
 
 

@@ -28,6 +28,8 @@
 //
 // https://www.sfml-dev.org/tutorials/1.6/network-sockets.php
 //
+// https://www.sfml-dev.org/tutorials/2.5/network-packet.php
+//
 
 // todo:
 //
@@ -77,9 +79,69 @@ while (running)
 
 // https://programmer.help/blogs/an-example-of-c-socket-programming-under-linux.html
 
+//
+// Detecting tcp client disconnect
+//
+//
+
+// TODO:
+// 1.
+// Detecting broken connection
+//
+// 2.
+// Move IP and Port parameters as arguments
+//
+// 3.
+// Make 2 separate threads for server and gpsdev, or server could be as a main process ?
+// What is a best way to exit, if it will be daemon ? By signal ?
+//
+//
+
+// Current Open Points:
+//
+// 1.
+// Server is not working, probably after put the code into pthread
+// Cannot debug because debugger do not found pthread sources.
+
 
 #include <iostream>
 #include <SFML/Network.hpp>
+#include <pthread.h>
+#include "sfml_serv.hpp"
+#include "server.hpp"
+#include "gpsdev.hpp"
+
+
+
+pthread_mutex_t condition_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t  condition_cond  = PTHREAD_COND_INITIALIZER;
+
+
+int main(int argc, char* argv[])
+{
+	/*
+	std::cout << "Server is starting" << std::endl;
+	Server();
+	std::cout << "Server is finished" << std::endl;
+	*/
+
+	pthread_t thread1, thread2;
+
+	pthread_create(&thread1, NULL, Server, NULL);
+	pthread_create(&thread2, NULL, Gpsdev, NULL);
+	pthread_join( thread1, NULL);
+	pthread_join( thread2, NULL);
+
+	exit(0);
+
+}
+
+
+#if 0
+
+#include <iostream>
+#include <SFML/Network.hpp>
+#include "server.hpp"
 
 const unsigned short PORT = 5000;
 const std::string IPADDRESS("127.0.0.1");//change to suit your needs
@@ -190,4 +252,4 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-
+#endif

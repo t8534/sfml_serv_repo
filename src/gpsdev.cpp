@@ -1,0 +1,90 @@
+/*
+ * gpsdev.cpp
+ *
+ *      Author: LiberdaA
+ */
+
+
+#include <iostream>
+#include <SFML/Network.hpp>
+#include <windows.h> // Sleep()
+#include <string.h>
+#include "gpsdev.hpp"
+#include "server.hpp"  // todo: is it necessary ?
+#include "gpshw.hpp"
+
+pthread_mutex_t gpsmsg_mutex;
+
+char gpsdev_buff[GPSDEV_BUFF_LEN];	// TODO: It should be global, but this is not ok.
+
+
+static void printBuff(unsigned char *b)
+{
+	printf("%s\n", *b);
+}
+
+
+void GPSDEV_GetMsg(char *b)
+{
+
+    pthread_mutex_lock(&gpsmsg_mutex);
+    // read buffer here
+    strcpy(b, gpsdev_buff);
+    /*
+    for(int i = 0; i < GPSDEV_BUFF_LEN ;i++)
+    {
+    	b[i] = gpsdev_buff[i];
+    }
+    */
+    pthread_mutex_unlock(&gpsmsg_mutex);
+
+
+
+#if 0
+	int len = 0;
+	len = GPSDEV_BUFF_LEN - 1;		//todo: danger, hard set
+	for(int i = 0; i < len; i++)
+	{
+		b[i] = 'A' + i;
+	}
+	printBuff(b);
+#endif
+
+}
+
+
+void *Gpsdev(void *x_void_ptr)
+{
+	bool gpsMsgReceived = false;  // Is gps msg received
+
+
+
+	for(;;)
+	{
+		memset(gpsdev_buff, 0, GPSDEV_BUFF_LEN);
+
+		// Check is gps msg received and set gpsMsgReceived = true if so
+		// copy it to the buffer under mutex controll and call server to send it.
+		// It emulate the data are arriving from  gps hw.
+		gpsMsgReceived = true;
+
+		// After full gps msg is received from gps_hw, send event to the Server.
+		if(gpsMsgReceived == true)
+		{
+			// Copy gps hw data to the buffer, than it could be processed by gpslib in future.
+		    pthread_mutex_lock(&gpsmsg_mutex);
+			GPSHW_GetMsg(gpsdev_buff);
+			pthread_mutex_unlock(&gpsmsg_mutex);
+
+			pthread_mutex_lock(&condition_mutex);
+			pthread_cond_signal(&condition_cond);
+			pthread_mutex_unlock(&condition_mutex);
+		}
+
+		//  set gpsMsgReceived = false to emulate waiting for complete msg from gps hgw
+		gpsMsgReceived == false;
+
+	}
+
+}
+
